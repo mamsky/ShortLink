@@ -26,7 +26,9 @@ class _CardView extends State<CardView> {
 
     setState(() {
       _isLoading = true;
-      _shortUrl = 'Hello';
+      _shortUrl = longUrl;
+      const Duration(seconds: 100);
+      _isLoading = false;
     });
   }
 
@@ -105,6 +107,30 @@ class _CardView extends State<CardView> {
                                 : const Text("🚀 Generate ShortL Link"),
                           ),
                           const SizedBox(height: 24),
+                          if (_shortUrl != null)
+                            Column(
+                              children: [
+                                const Text(
+                                  "🔗 Your shortened URL",
+                                  textAlign: TextAlign.left,
+                                  style: const TextStyle.new(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SelectableText(
+                                  _shortUrl!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.cyanAccent,
+                                    fontSize: 16,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),
