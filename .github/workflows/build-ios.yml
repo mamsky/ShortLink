@@ -33,7 +33,7 @@ jobs:
           mv app.ipa output/
 
       - name: Upload .ipa file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
           path: output/app.ipa
