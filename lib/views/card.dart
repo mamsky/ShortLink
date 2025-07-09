@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttergo/controllers/shortlink_controller.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class CardView extends StatefulWidget {
   const CardView({super.key});
-
   @override
   State<CardView> createState() => _CardView();
 }
@@ -26,10 +29,33 @@ class _CardView extends State<CardView> {
 
     setState(() {
       _isLoading = true;
-      _shortUrl = longUrl;
-      const Duration(seconds: 100);
-      _isLoading = false;
+      _shortUrl = null;
     });
+
+    try {
+      final result = await ShortlinkController.generateShortLink(longUrl);
+      setState(() {
+        _shortUrl = result;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _copyToClipboard() async {
+    final shortLink = _shortUrl;
+    if (shortLink == null) return;
+    await Clipboard.setData(ClipboardData(text: shortLink));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Copied to clipboard")));
   }
 
   @override
@@ -104,7 +130,7 @@ class _CardView extends State<CardView> {
                                       color: Colors.black,
                                     ),
                                   )
-                                : const Text("🚀 Generate ShortL Link"),
+                                : const Text("🚀 Generate ShortL Link "),
                           ),
                           const SizedBox(height: 24),
                           if (_shortUrl != null)
@@ -129,8 +155,31 @@ class _CardView extends State<CardView> {
                                     decoration: TextDecoration.underline,
                                   ),
                                 ),
+
+                                const SizedBox(height: 20),
+                                QrImageView(
+                                  data: _shortUrl!,
+                                  size: 180,
+                                  backgroundColor: Colors.white,
+                                ),
                               ],
                             ),
+                          const SizedBox(height: 20),
+                          Wrap(
+                            spacing: 12,
+                            children: [
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                onPressed: _copyToClipboard,
+                                label: Text("Copy"),
+                                icon: const Icon(Icons.copy),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  side: const BorderSide(color: Colors.white30),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
