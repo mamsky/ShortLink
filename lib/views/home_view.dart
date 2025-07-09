@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttergo/views/card.dart';
+import 'package:fluttergo/views/footer.dart';
 
 class HomeView extends StatelessWidget {
   @override
@@ -17,6 +18,7 @@ class HomeView extends StatelessWidget {
         centerTitle: true,
       ),
       body: CardView(),
+      bottomNavigationBar: AppFooter(),
     );
   }
 }
