@@ -49,13 +49,15 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   http: ^1.4.0
   qr_flutter: ^4.0.0
+  url_launcher: ^6.2.5
+  android_intent_plus: ^4.0.3
+  flutter_native_splash: ^2.3.2
 
 flutter_icons:
   android: true
   ios: true
   image_path: "assets/logo.png"
-  adaptive_icon_background: "#00E5FF"
-  adaptive_icon_foreground: "assets/foreground.png"
+  adaptive_icon_foreground: "assets/logo.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

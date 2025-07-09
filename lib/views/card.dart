@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttergo/controllers/shortlink_controller.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CardView extends StatefulWidget {
   const CardView({super.key});
@@ -24,6 +27,15 @@ class _CardView extends State<CardView> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Please enter a URL")));
+      return;
+    }
+
+    if (!longUrl.startsWith('http://') && !longUrl.startsWith('https://')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a URL start with http:// or https://"),
+        ),
+      );
       return;
     }
 
@@ -56,6 +68,60 @@ class _CardView extends State<CardView> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text("Copied to clipboard")));
+  }
+
+  Future<void> _openUrl() async {
+    final shortLink = _shortUrl;
+    if (shortLink == null || shortLink.isEmpty) return;
+
+    final urlWithScheme = shortLink.startsWith('http')
+        ? shortLink
+        : 'https://$shortLink';
+
+    final uri = Uri.tryParse(urlWithScheme);
+
+    if (uri == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Invalid URL")));
+      return;
+    }
+
+    if (Platform.isAndroid) {
+      final intent = AndroidIntent(
+        action: 'action_view',
+        data: uri.toString(),
+        package: 'com.android.chrome',
+      );
+
+      try {
+        await intent.launch();
+      } catch (e) {
+        // fallback ke browser default
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Could not open: $urlWithScheme")),
+          );
+        }
+      }
+    } else {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Could not open: $urlWithScheme")),
+        );
+      }
+    }
+  }
+
+  Future<void> _reset() async {
+    setState(() {
+      _shortUrl = null;
+      _urlController.text = '';
+    });
   }
 
   @override
@@ -162,24 +228,53 @@ class _CardView extends State<CardView> {
                                   size: 180,
                                   backgroundColor: Colors.white,
                                 ),
+                                const SizedBox(height: 20),
+                                Center(
+                                  child: Wrap(
+                                    spacing: 12,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: _openUrl,
+                                        icon: Icon(Icons.open_in_browser),
+                                        label: Text(
+                                          "Open",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              Colors.deepPurpleAccent,
+                                          iconColor: Colors.white,
+                                        ),
+                                      ),
+                                      OutlinedButton.icon(
+                                        onPressed: _copyToClipboard,
+                                        label: Text("Copy"),
+                                        icon: const Icon(Icons.copy),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          side: const BorderSide(
+                                            color: Colors.white30,
+                                          ),
+                                        ),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: _reset,
+                                        label: Text(
+                                          "Reset",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        icon: Icon(Icons.restore),
+                                        style: OutlinedButton.styleFrom(
+                                          backgroundColor:
+                                              Colors.lightBlueAccent,
+                                          iconColor: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
-                          const SizedBox(height: 20),
-                          Wrap(
-                            spacing: 12,
-                            children: [
-                              const SizedBox(width: 8),
-                              OutlinedButton.icon(
-                                onPressed: _copyToClipboard,
-                                label: Text("Copy"),
-                                icon: const Icon(Icons.copy),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: const BorderSide(color: Colors.white30),
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
